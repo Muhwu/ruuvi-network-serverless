@@ -21,8 +21,8 @@ custom:
   dynamoGatewayWhitelist: ${self:custom.stage}-GatewayWhitelist
   dynamoAlerts: ${self:custom.stage}-SensorAlerts
   sensorProfileBucket: ${self:custom.stage}-sensor-profile-pictures
-  longTermStorageInterval: 960      # seconds between data points
-  rawDataTTL: 360000                # 10800 = 2h, 7776000 = 3 months
+  longTermStorageInterval: 900      # seconds between data points
+  rawDataTTL: 10800                 # 10800 = 3h, 7776000 = 3 months
   verificationShortTokenLength: 4   # Length of the short verification token sent in the e-mail
 
   sourceEmail: 'otso@ruuvi.com'
