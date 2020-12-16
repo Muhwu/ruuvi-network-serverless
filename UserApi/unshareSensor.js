@@ -29,7 +29,8 @@ exports.handler = async (event, context) => {
     const sensor = eventBody.sensor;
     const targetUserEmail = eventBody.user;
 
-    if (!targetUserEmail || !validator.validateEmail(targetUserEmail)) {
+    // Required when owner of the sensor
+    if (targetUserEmail && !validator.validateEmail(targetUserEmail)) {
         return gatewayHelper.errorResponse(gatewayHelper.HTTPCodes.INVALID, "Invalid E-mail given.");
     }
 
@@ -103,16 +104,21 @@ exports.handler = async (event, context) => {
                         AND sensors.owner_id != ?
                         AND sensors.sensor_id = ?`,
                 timeout: 1000,
-                values: [user.id, owner.id, user.id, sensor]
+                values: [user.id, owner, user.id, sensor]
             });
 
             wasRemoved = results.affectedRows >= 1;
 
             if (wasRemoved) {
                 // Success
-                console.log(`User ${user.id} unshared sensor ${sensor} from ${targetUserId}`);
-                await emailHelper.sendShareRemovedNotification(
-                    owner.email,
+                const ownerUser = await sqlHelper.fetchSingle('id', owner, 'users');
+                if (ownerUser === null) {
+                    return gatewayHelper.errorResponse(gatew.HTTPCodes.INVALID, "Error sending notification to owner.");
+                }
+
+                console.log(`User ${user.email} (${user.id}) unshared sensor ${sensor} from ${ownerUser.email} (${owner})`);
+                let emailResult = await emailHelper.sendShareRemovedNotification(
+                    ownerUser.email,
                     sensor, // We probably want to fetch the localized sensor name for this
                     user.email,
                     process.env.SOURCE_EMAIL,
